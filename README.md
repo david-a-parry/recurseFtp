@@ -20,6 +20,7 @@ Clone the repository to create the recurseFtp folder.
 
 cd into the newly downloaded folder and run the script for usage information
 
+    cd recurseFtp
     ./recurseFtp.pl --help
 
 ##Usage
