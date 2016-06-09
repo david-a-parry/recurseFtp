@@ -117,6 +117,13 @@ if (@remote_dir) {
             $ftp->get_files_recursively();
         }
     }
+}else{
+    if ($list_only) {
+        my @list = $ftp->read_files_recursively();
+        print join( "\n", @list ) . "\n";
+    }else{
+        $ftp->get_files_recursively();
+    }
 }
 print STDERR "Done!\n";
 $ftp->quit;
