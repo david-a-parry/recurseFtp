@@ -232,17 +232,17 @@ our $AUTOLOAD;
 
 sub DESTROY{
     my ($self) = @_;
-	if ($self->{_ftp_object}){
-		$self->{_ftp_object}->quit();	
-	}
+    if ($self->{_ftp_object}){
+        $self->{_ftp_object}->quit();
+    }
     $self -> _decr_count( );
 }
 
 sub quit{
-	my ($self) = @_;
-	if ($self->{_ftp_object}){
-		$self->{_ftp_object}->quit();	
-	}
+    my ($self) = @_;
+    if ($self->{_ftp_object}){
+        $self->{_ftp_object}->quit();    
+    }
 }
 sub new {
     my ($class, %args) = @_;
@@ -258,19 +258,19 @@ sub new {
         }
     }
     $class -> _incr_count();
-	return $self;
+    return $self;
 }
 
 sub set_mode{
-	my ($self, $val) = @_;
-	if (not $self->{_ftp_object}){
-		carp "Can't set mode before login - set_mode failed! ";
-	}else{
-		$self->{_ftp_object} -> $val();
-	}
+    my ($self, $val) = @_;
+    if (not $self->{_ftp_object}){
+        carp "Can't set mode before login - set_mode failed! ";
+    }else{
+        $self->{_ftp_object} -> $val();
+    }
 }
-	
-	
+    
+    
 
 #use autoload for standard ->get and ->set methods
 sub AUTOLOAD{
@@ -295,79 +295,79 @@ sub AUTOLOAD{
 
 ##############################
 sub login{
-	my ($self, %args) = @_;
-	
-    set_dir($self, $args{dir}) if ($args{dir});	
-	set_username($self, $args{username}) if ($args{username});	
-	set_site($self, $args{site}) if ($args{site});	
-	$self->{_mode} = $args{mode} if ($args{mode});	
-	
+    my ($self, %args) = @_;
+    
+    set_dir($self, $args{dir}) if ($args{dir});    
+    set_username($self, $args{username}) if ($args{username});    
+    set_site($self, $args{site}) if ($args{site});    
+    $self->{_mode} = $args{mode} if ($args{mode});    
+    
     my $ftp = Net::FTP->new($self->{_site});
-	
+    
     croak "FTP object could not be created - please check the address of the ".
           "ftp site you provided " if not defined $ftp;
-	my $password = "";
-	$password = read_password
+    my $password = "";
+    $password = read_password
     (
         "Enter password for $self->{_username}: "
     ) unless $self->{_no_password};
-	
+    
     $ftp -> login
     (
         $self->{_username}, 
         $password,
     )or croak "\nCould not login to $self->{_site} with user credentials. ", 
               $ftp->message;
-	
+    
     $self->{_ftp_object} =  $ftp;
-	
+    
     set_mode($self, $self->{_mode}) if ($self->{_mode});
 }
 
 ##############################
 sub read_files_recursively{
-	my ($self, %args) = @_;
-	set_file_match
+    my ($self, %args) = @_;
+    set_file_match
     (
         $self, 
         $args{_file_match}
     ) if ($args{_file_match});
-	
+    
     set_dir_match
     (
         $self, 
         $args{_dir_match}
     ) if ($args{_dir_match});
-	
+    
     set_dir
     (
         $self, 
         $args{dir}
-    ) if ($args{dir});	
-	
+    ) if ($args{dir});    
+    
     my $cwd = getcwd();
-	my @list = read_files_traverse_directories
+    my @list = read_files_traverse_directories
     (
         $self, 
         $self->{_ftp_object}, 
         $self->{_dir},
     );
-	return @list if defined(wantarray);
-	carp "read_files_recursively method called in void context ";
+    return @list if defined(wantarray);
+    carp "read_files_recursively method called in void context ";
 }
 
 ##############################
 sub read_files_traverse_directories{
     my ($self, $ftp, $remote_dir, $dir_cat) = @_;
     my $remote_root = $ftp->pwd();
-	if ($remote_dir){
+    if ($remote_dir){
         print STDERR "Processing directory $remote_dir...\n";
         $ftp->cwd($remote_dir) 
            or croak "Can't enter remote directory $remote_dir " , $ftp->message;
     }
     my @list = $ftp->ls();
     my @dirs = ();
-	my @files = ();
+    my @files = ();
 LIST: foreach my $l (@list){
         if ($ftp->isfile($l)){
         #implement _file_match here
@@ -384,59 +384,59 @@ LIST: foreach my $l (@list){
     }
 DIR: foreach my $dir (@dirs){
         my $cwd = getcwd();
-		#implement _dir_match here
+        #implement _dir_match here
         if ($self->{_dir_match}){
-			if ($dir !~ m/$self->{_dir_match}/){
-				next DIR;
-			}
-		}
-		my $dir_cat_temp = $dir;
-		if ($dir_cat){
-			$dir_cat_temp = "$dir_cat/$dir";
-		}
-		push(@files, $dir_cat_temp);
-		push (@files,  read_files_traverse_directories($self, $ftp, $dir, $dir_cat_temp));
+            if ($dir !~ m/$self->{_dir_match}/){
+                next DIR;
+            }
+        }
+        my $dir_cat_temp = $dir;
+        if ($dir_cat){
+            $dir_cat_temp = "$dir_cat/$dir";
+        }
+        push(@files, $dir_cat_temp);
+        push (@files,  read_files_traverse_directories($self, $ftp, $dir, $dir_cat_temp));
     }
     $ftp -> cwd($remote_root) 
         or croak "Can't move back to remote directory $remote_root ", 
         $ftp->message;
-	return @files if defined(wantarray);
-	carp "read_files_traverse_directories called in void context";
+    return @files if defined(wantarray);
+    carp "read_files_traverse_directories called in void context";
 }
 
 ##############################
 sub get_files_recursively{
-	my ($self, %args) = @_;
-	set_local_dir
+    my ($self, %args) = @_;
+    set_local_dir
     (
         $self, 
         $args{local_dir},
     ) if ($args{local_dir});
-	
-	set_file_match
+    
+    set_file_match
     (
         $self, 
         $args{_file_match}
     ) if ($args{_file_match});
-	
+    
     set_dir_match
     (
         $self, 
         $args{_dir_match}
     ) if ($args{_dir_match});
-	
+    
     set_dir(
         $self, 
         $args{dir}
-    ) if ($args{dir});	
-	
+    ) if ($args{dir});    
+    
     my $cwd = getcwd();
-	set_local_dir
+    set_local_dir
     (
         $self, 
         $cwd
-    ) if (not $self->{local_dir});	
-	
+    ) if (not $self->{local_dir});    
+    
     get_files_traverse_directories
     (
         $self, 
@@ -449,12 +449,12 @@ sub get_files_recursively{
 ##############################
 sub get_files_traverse_directories{
     my ($self, $ftp, $root, $remote_dir) = @_;
-	my $pwd = getcwd();
-	$root =~ s/\/$//;
-	my $rootquote = quotemeta($root);
-	if ($pwd !~ /$rootquote$/){
-		 chdir $rootquote || croak "$! ";
-	}
+    my $pwd = getcwd();
+    $root =~ s/\/$//;
+    my $rootquote = quotemeta($root);
+    if ($pwd !~ /$rootquote$/){
+         chdir $rootquote || croak "$! ";
+    }
     my $remote_root = $ftp->pwd();
     if ($remote_dir){
         print STDERR "Processing directory $remote_dir...\n";
@@ -473,118 +473,118 @@ LIST: foreach my $l (@list){
         if ($ftp->isfile($l)){
         #implement _file_match here
             if ($self->{_file_match}){
-				if ($l !~ m/$self->{_file_match}/){
-					next LIST;
-				}
-			}
-			my $file_size = $ftp->size($l);
-			if ($self->{_skip_existing}){
-				next LIST if (-e $l);#check if local file exists
-			}
-			if ($self->{_warn_before_overwriting}){
-				if (-e $l){#check if local file exists
-					my $local_size = -s $l;
-					print STDERR "Warning - local file $l already exists.\n";
-					print STDERR "Local file is $local_size size bytes, remote".
-                                " file is $file_size bytes. Overwrite? (y/n)\n";
-					while (my $answer = <STDIN>){  
-						chomp $answer; 
-						if ($answer =~ /^y/i){
-							last;
-						}elsif ($answer =~ /^n/i){
-							print STDERR "Skipping...\n";
-							next LIST;
-						}else{
-							print STDERR "Please answer either \"y\" or \"n\"\n";
-						}
-					}
+                if ($l !~ m/$self->{_file_match}/){
+                    next LIST;
                 }
-			}elsif ($self->{_overwrite_smaller}){
-				if (-e $l){#check if local file exists
+            }
+            my $file_size = $ftp->size($l);
+            if ($self->{_skip_existing}){
+                next LIST if (-e $l);#check if local file exists
+            }
+            if ($self->{_warn_before_overwriting}){
+                if (-e $l){#check if local file exists
                     my $local_size = -s $l;
-					if ($local_size >= $file_size){
-						print STDERR "Skipping $l (local file size $local_size".
+                    print STDERR "Warning - local file $l already exists.\n";
+                    print STDERR "Local file is $local_size size bytes, remote".
+                                " file is $file_size bytes. Overwrite? (y/n)\n";
+                    while (my $answer = <STDIN>){  
+                        chomp $answer; 
+                        if ($answer =~ /^y/i){
+                            last;
+                        }elsif ($answer =~ /^n/i){
+                            print STDERR "Skipping...\n";
+                            next LIST;
+                        }else{
+                            print STDERR "Please answer either \"y\" or \"n\"\n";
+                        }
+                    }
+                }
+            }elsif ($self->{_overwrite_smaller}){
+                if (-e $l){#check if local file exists
+                    my $local_size = -s $l;
+                    if ($local_size >= $file_size){
+                        print STDERR "Skipping $l (local file size $local_size".
                                      ", remote file size $file_size)\n";
-						next LIST; 
-					}else{
-						print STDERR "Replacing $l (local file size $local_size"
+                        next LIST; 
+                    }else{
+                        print STDERR "Replacing $l (local file size $local_size"
                                      .", remote file size $file_size)\n";
-					}
-				}
-			}
-			if ($file_size){
-				#print STDERR "Getting file $l... ($file_size bytes)\n";
-				my ($sensible_size, $sensible_units) 
+                    }
+                }
+            }
+            if ($file_size){
+                #print STDERR "Getting file $l... ($file_size bytes)\n";
+                my ($sensible_size, $sensible_units) 
                     = get_sensible_units($file_size);
-				printf STDERR 
+                printf STDERR 
                 (
                     "Getting file $l... (%.2f $sensible_units)\n", 
                     $sensible_size
                 );
-				my $width = chars();#use Term::Size::Perl to get terminal width
-				if ($width){
-					$ftp->hash(\*STDERR, $file_size/$width);
-				}
-				my ($sec, $micro) = Time::HiRes::gettimeofday();
+                my $width = chars();#use Term::Size::Perl to get terminal width
+                if ($width){
+                    $ftp->hash(\*STDERR, $file_size/$width);
+                }
+                my ($sec, $micro) = Time::HiRes::gettimeofday();
                 $ftp->get($l) || carp $ftp->message;
-				my ($sec2, $micro2) = Time::HiRes::gettimeofday();
-				my $local_size = -s $l;
-				if ($local_size < $file_size){
-					print STDERR "WARNING - incomplete transfer for file $l ".
+                my ($sec2, $micro2) = Time::HiRes::gettimeofday();
+                my $local_size = -s $l;
+                if ($local_size < $file_size){
+                    print STDERR "WARNING - incomplete transfer for file $l ".
                                  "($local_size retrieved, remote file size = ".
                                  "$file_size)\n";
-					if ($self->{_retries}){
-						for (my $att = 1; $att <= $self->{_retries}; $att++){
-							print STDERR "Reattempting transfer of $l... ".
+                    if ($self->{_retries}){
+                        for (my $att = 1; $att <= $self->{_retries}; $att++){
+                            print STDERR "Reattempting transfer of $l... ".
                                          "(attempt " .(1+$att). " of " .
                                          (1 + $self->{_retries}). ")\n";
-							($sec, $micro) = Time::HiRes::gettimeofday();
-                	        			$ftp->get($l) || carp $ftp->message;
-							($sec2, $micro2) = Time::HiRes::gettimeofday();
-							$local_size = -s $l;
-							last if $local_size >= $file_size;
-							print STDERR "WARNING - incomplete transfer for ".
+                            ($sec, $micro) = Time::HiRes::gettimeofday();
+                                        $ftp->get($l) || carp $ftp->message;
+                            ($sec2, $micro2) = Time::HiRes::gettimeofday();
+                            $local_size = -s $l;
+                            last if $local_size >= $file_size;
+                            print STDERR "WARNING - incomplete transfer for ".
                                          "file $l ($local_size retrieved, ".
                                          "remote file size = $file_size)\n";
-							print STDERR "Transfer failed after " .($att + 1).
+                            print STDERR "Transfer failed after " .($att + 1).
                                          " attempts\n" 
                                          if ($att == $self->{_retries});
-						}
-					}
-				}
-				my $diff = $sec2 - $sec;
-				if ($diff){
-					printf STDERR 
+                        }
+                    }
+                }
+                my $diff = $sec2 - $sec;
+                if ($diff){
+                    printf STDERR 
                     (
                         "$local_size bytes retrieved in $diff seconds ". 
                         "(%.2f MB/s)\n", 
                         (($local_size/1048576)/$diff)
                     );
-				}else{
-					$diff = $micro2 - $micro;
-					printf STDERR 
+                }else{
+                    $diff = $micro2 - $micro;
+                    printf STDERR 
                     (
                         "$local_size bytes retrieved in $diff microseconds ".
                         "(%.2f MB/s)\n", 
                         (($local_size/1048576)/($diff*10**-6))
                     );
-				}
-				#print STDERR "-" x $width ."\n" if $width;
-				if ($width){
-					#just some vague prettiness/silliness to print
-					print_timed_dashed_line($width, 2000);
-				}
-			}else{
-				print STDERR "Warning - file $l has 0 byte size on remote ".
+                }
+                #print STDERR "-" x $width ."\n" if $width;
+                if ($width){
+                    #just some vague prettiness/silliness to print
+                    print_timed_dashed_line($width, 2000);
+                }
+            }else{
+                print STDERR "Warning - file $l has 0 byte size on remote ".
                              "server.\n";
                 $ftp->get($l) or carp $ftp->message;
-				my $width = chars();#use Term::Size::Perl to get terminal width
-				#print STDERR "-" x $width ."\n" if $width;
-				if ($width){
-					#just some vague prettiness/silliness to print
-					print_timed_dashed_line($width, 2000);
-				}
-			}
+                my $width = chars();#use Term::Size::Perl to get terminal width
+                #print STDERR "-" x $width ."\n" if $width;
+                if ($width){
+                    #just some vague prettiness/silliness to print
+                    print_timed_dashed_line($width, 2000);
+                }
+            }
         }elsif ($ftp->isdir($l)){
                 push (@dirs, $l);
         }
@@ -592,20 +592,20 @@ LIST: foreach my $l (@list){
 DIR: foreach my $dir (@dirs){
         next if $dir =~ /^\./;
         my $cwd = getcwd();
-		#implement _dir_match here
+        #implement _dir_match here
         if ($self->{_dir_match}){
-			if ($dir !~ m/$self->{_dir_match}/){
-				next DIR;
-			}
-		}
-		get_files_traverse_directories($self, $ftp, $cwd, $dir);
+            if ($dir !~ m/$self->{_dir_match}/){
+                next DIR;
+            }
+        }
+        get_files_traverse_directories($self, $ftp, $cwd, $dir);
     }
     chdir $root;
-	if ($remote_dir){
-		if (folder_is_empty($remote_dir) and $self->{_file_match}){
-			rmdir $remote_dir or carp "$! ";
-		}
-	}
+    if ($remote_dir){
+        if (folder_is_empty($remote_dir) and $self->{_file_match}){
+            rmdir $remote_dir or carp "$! ";
+        }
+    }
     $ftp->cwd($remote_root) 
         or croak "Can't move back to remote directory $remote_root ", 
         $ftp->message;
@@ -621,16 +621,16 @@ sub folder_is_empty {
 
 ##############################
 sub print_timed_dashed_line{
-	#arguments are line width and sleep in microseconds 
-	my ($width, $sleep) = @_;
-	my $old_flush = $|; 
-	$| = 1;
-	for (my $i = 0; $i < $width; $i++){
-		print STDERR "-";
-		usleep($sleep);
-	}
-	print STDERR "\n";
-	$| =  $old_flush; #leave $| as we found it.
+    #arguments are line width and sleep in microseconds 
+    my ($width, $sleep) = @_;
+    my $old_flush = $|; 
+    $| = 1;
+    for (my $i = 0; $i < $width; $i++){
+        print STDERR "-";
+        usleep($sleep);
+    }
+    print STDERR "\n";
+    $| =  $old_flush; #leave $| as we found it.
 }
 
 ##############################
